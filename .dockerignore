@@ -1,0 +1,15 @@
+.git
+.github
+.codex
+.agents
+node_modules
+**/node_modules
+dist
+**/dist
+build
+coverage
+.env
+*.log
+README.md
+docs
+openspec
