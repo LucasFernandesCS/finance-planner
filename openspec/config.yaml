@@ -1,20 +1,58 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Project: Finance Planner
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Purpose:
+  A financial planning system for goals such as house, car, videogame,
+  travel, emergency reserve, or any dream.
+
+  Stack:
+  - Backend: Node.js, Express, TypeScript
+  - Frontend: React, Vite, TypeScript
+  - Database: PostgreSQL
+  - ORM: Prisma
+  - Validation: Zod
+  - Tests: Vitest or Jest, Supertest for API integration tests
+  - Package manager: pnpm
+  - Architecture: modular monorepo
+
+  Backend architecture:
+  Route -> Controller -> Service -> Repository -> Prisma
+
+  Backend modules live in:
+  apps/api/src/modules
+
+  Shared backend code lives in:
+  apps/api/src/shared
+
+  Frontend app lives in:
+  apps/web
+
+  Shared package lives in:
+  packages/shared
+
+rules:
+  proposal:
+    - Explain the problem before proposing the solution.
+    - Include in-scope and out-of-scope sections.
+    - Include success criteria.
+    - Avoid implementation details unless they clarify scope.
+
+  specs:
+    - Specs must describe observable behavior.
+    - Use SHALL for requirements.
+    - Use GIVEN/WHEN/THEN for scenarios.
+    - Keep implementation details in design.md, not spec.md.
+    - Prefer domain/capability names over technical file names.
+
+  design:
+    - Include affected modules and files.
+    - Include API contracts when endpoints are created or changed.
+    - Include database changes when Prisma schema is affected.
+    - Include validation, authorization, and error mapping.
+
+  tasks:
+    - Tasks must be small and checkable.
+    - Group tasks by database, backend, frontend, tests, CI, Docker, and verification.
+    - Include typecheck, lint, tests, build, and manual verification when relevant.
