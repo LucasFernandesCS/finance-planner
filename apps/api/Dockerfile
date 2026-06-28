@@ -7,10 +7,12 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/shared/package.json packages/shared/package.json
+COPY prisma/schema.prisma prisma/schema.prisma
 RUN pnpm install --frozen-lockfile
 
 COPY apps/api apps/api
 COPY packages/shared packages/shared
+RUN pnpm exec prisma generate --schema prisma/schema.prisma
 RUN pnpm --filter @finance-planner/shared build
 RUN pnpm --filter @finance-planner/api build
 
@@ -24,7 +26,9 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/shared/package.json packages/shared/package.json
+COPY prisma/schema.prisma prisma/schema.prisma
 RUN pnpm install --frozen-lockfile --prod
+RUN pnpm exec prisma generate --schema prisma/schema.prisma
 
 COPY --from=build /app/apps/api/dist apps/api/dist
 COPY --from=build /app/packages/shared/dist packages/shared/dist
