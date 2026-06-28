@@ -13,6 +13,7 @@ jobs:
   quality:
     name: Quality checks
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -47,16 +48,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: pnpm
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        run: pnpm exec prisma generate --schema prisma/schema.prisma
+        run: pnpm --filter @finance-planner/api db:generate
 
       - name: Run database migrations
-        run: pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+        run: pnpm --filter @finance-planner/api db:deploy
 
       - name: Typecheck
         run: pnpm typecheck

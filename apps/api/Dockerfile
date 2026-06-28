@@ -7,18 +7,20 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/shared/package.json packages/shared/package.json
-COPY prisma/schema.prisma prisma/schema.prisma
+
 RUN pnpm install --frozen-lockfile
 
 COPY apps/api apps/api
 COPY packages/shared packages/shared
-RUN pnpm exec prisma generate --schema prisma/schema.prisma
+
+RUN pnpm --filter @finance-planner/api db:generate
 RUN pnpm --filter @finance-planner/shared build
 RUN pnpm --filter @finance-planner/api build
 
 FROM node:22-alpine AS runtime
 
 ENV NODE_ENV=production
+
 WORKDIR /app
 
 RUN corepack enable
@@ -26,12 +28,14 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/shared/package.json packages/shared/package.json
-COPY prisma/schema.prisma prisma/schema.prisma
+
 RUN pnpm install --frozen-lockfile --prod
-RUN pnpm exec prisma generate --schema prisma/schema.prisma
 
 COPY --from=build /app/apps/api/dist apps/api/dist
+COPY --from=build /app/apps/api/prisma apps/api/prisma
 COPY --from=build /app/packages/shared/dist packages/shared/dist
+
+RUN pnpm --filter @finance-planner/api db:generate
 
 EXPOSE 3333
 
