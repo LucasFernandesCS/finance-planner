@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 type ApiEnv = {
   databaseUrl: string;
   jwtAccessSecret: string;
@@ -15,11 +17,14 @@ const testDefaults = {
   JWT_ACCESS_EXPIRES_IN: "15m",
   CPF_HASH_SECRET: "test-cpf-hash-secret",
   REFRESH_TOKEN_HASH_SECRET: "test-refresh-token-hash-secret",
-  REFRESH_TOKEN_EXPIRES_IN_MINUTES: "30"
+  REFRESH_TOKEN_EXPIRES_IN_MINUTES: "30",
 };
 
 function getEnvValue(key: keyof typeof testDefaults): string | undefined {
-  return process.env[key] ?? (process.env.NODE_ENV === "test" ? testDefaults[key] : undefined);
+  return (
+    process.env[key] ??
+    (process.env.NODE_ENV === "test" ? testDefaults[key] : undefined)
+  );
 }
 
 function requireEnv(key: keyof typeof testDefaults): string {
@@ -33,10 +38,17 @@ function requireEnv(key: keyof typeof testDefaults): string {
   return value;
 }
 
-const refreshTokenExpiresInMinutes = Number(requireEnv("REFRESH_TOKEN_EXPIRES_IN_MINUTES"));
+const refreshTokenExpiresInMinutes = Number(
+  requireEnv("REFRESH_TOKEN_EXPIRES_IN_MINUTES"),
+);
 
-if (!Number.isInteger(refreshTokenExpiresInMinutes) || refreshTokenExpiresInMinutes <= 0) {
-  throw new Error("REFRESH_TOKEN_EXPIRES_IN_MINUTES must be a positive integer.");
+if (
+  !Number.isInteger(refreshTokenExpiresInMinutes) ||
+  refreshTokenExpiresInMinutes <= 0
+) {
+  throw new Error(
+    "REFRESH_TOKEN_EXPIRES_IN_MINUTES must be a positive integer.",
+  );
 }
 
 export const env: ApiEnv = {
@@ -47,5 +59,5 @@ export const env: ApiEnv = {
   refreshTokenHashSecret: requireEnv("REFRESH_TOKEN_HASH_SECRET"),
   refreshTokenExpiresInMinutes,
   port: Number(process.env.PORT ?? 3333),
-  nodeEnv: process.env.NODE_ENV ?? "development"
+  nodeEnv: process.env.NODE_ENV ?? "development",
 };

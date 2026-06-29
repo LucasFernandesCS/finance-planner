@@ -55,6 +55,7 @@ model User {
   variableExpenses VariableExpense[]
   goals         Goal[]
   goalContributions GoalContribution[]
+  profile       UserProfile?
 }
 
 model RefreshToken {
@@ -160,4 +161,21 @@ model GoalContribution {
   @@index([goalId])
   @@index([userId])
   @@index([userId, contributedAt])
+}
+
+model UserProfile {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  displayName            String?
+  avatarUrl              String?
+  currencyCode           String   @default("BRL")
+  locale                 String   @default("pt-BR")
+  timezone               String   @default("America/Recife")
+  financialMonthStartDay Int      @default(1)
+  primaryGoalId          String?
+  onboardingCompleted    Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
