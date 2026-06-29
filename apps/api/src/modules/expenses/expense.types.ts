@@ -16,6 +16,7 @@ export const EXPENSE_CATEGORIES = [
   "SUBSCRIPTION",
   "MAINTENANCE",
   "TAX",
+  "DEBT_PAYMENT",
   "OTHER"
 ] as const;
 
