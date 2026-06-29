@@ -6,6 +6,7 @@ import { expenseRouter } from "./modules/expenses/expense.routes.js";
 import { goalRouter } from "./modules/goals/goal.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { incomeRouter } from "./modules/incomes/income.routes.js";
+import { userProfileRouter } from "./modules/user-profile/user-profile.routes.js";
 
 export const app = express();
 
@@ -15,4 +16,5 @@ app.use(authRouter);
 app.use(incomeRouter);
 app.use(expenseRouter);
 app.use(goalRouter);
+app.use(userProfileRouter);
 app.use(errorHandler);
