@@ -30,6 +30,7 @@ enum ExpenseCategory {
   SUBSCRIPTION
   MAINTENANCE
   TAX
+  DEBT_PAYMENT
   OTHER
 }
 
@@ -37,6 +38,21 @@ enum GoalStatus {
   NOT_STARTED
   IN_PROGRESS
   ACHIEVED
+}
+
+enum DebtStatus {
+  IN_PROGRESS
+  OVERDUE
+  PAID
+}
+
+enum DebtType {
+  INSTALLMENT
+  RECURRING
+  REVOLVING
+  INFORMAL_LOAN
+  FINANCING
+  OTHER
 }
 
 model User {
@@ -56,6 +72,8 @@ model User {
   goals         Goal[]
   goalContributions GoalContribution[]
   profile       UserProfile?
+  debts         Debt[]
+  debtPayments  DebtPayment[]
 }
 
 model RefreshToken {
@@ -178,4 +196,44 @@ model UserProfile {
   updatedAt              DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Debt {
+  id                       String        @id @default(uuid())
+  userId                   String
+  title                    String
+  creditor                 String
+  type                     DebtType
+  originalAmountInCents    BigInt
+  currentBalanceInCents    BigInt
+  installmentAmountInCents BigInt?
+  monthlyDueDay            Int
+  status                   DebtStatus    @default(IN_PROGRESS)
+  description              String?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments DebtPayment[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, type])
+}
+
+model DebtPayment {
+  id            String   @id @default(uuid())
+  debtId        String
+  userId        String
+  amountInCents BigInt
+  paidAt        DateTime @default(now())
+  note          String?
+  createdAt     DateTime @default(now())
+
+  debt Debt @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([debtId])
+  @@index([userId])
+  @@index([userId, paidAt])
 }

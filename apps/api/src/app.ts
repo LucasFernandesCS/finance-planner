@@ -2,6 +2,7 @@ import express from "express";
 
 import { errorHandler } from "./shared/error-handler.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { debtRouter } from "./modules/debts/debt.routes.js";
 import { expenseRouter } from "./modules/expenses/expense.routes.js";
 import { goalRouter } from "./modules/goals/goal.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
@@ -17,4 +18,5 @@ app.use(incomeRouter);
 app.use(expenseRouter);
 app.use(goalRouter);
 app.use(userProfileRouter);
+app.use(debtRouter);
 app.use(errorHandler);
