@@ -7,7 +7,8 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, _ne
     response.status(error.statusCode).json({
       error: {
         code: error.code,
-        message: error.message
+        message: error.message,
+        ...("details" in error && typeof error.details === "object" ? error.details : {})
       }
     });
     return;

@@ -33,6 +33,12 @@ enum ExpenseCategory {
   OTHER
 }
 
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ACHIEVED
+}
+
 model User {
   id           String   @id @default(uuid())
   firstName    String
@@ -47,6 +53,8 @@ model User {
   incomes       Income[]
   fixedExpenses FixedExpense[]
   variableExpenses VariableExpense[]
+  goals         Goal[]
+  goalContributions GoalContribution[]
 }
 
 model RefreshToken {
@@ -114,4 +122,42 @@ model VariableExpense {
   @@index([userId])
   @@index([userId, referenceMonth])
   @@index([userId, category])
+}
+
+model Goal {
+  id                   String     @id @default(uuid())
+  userId               String
+  title                String
+  targetAmountInCents  BigInt
+  monthlyAmountInCents BigInt
+  currentAmountInCents BigInt     @default(0)
+  deadlineDate         DateTime
+  status               GoalStatus @default(NOT_STARTED)
+  description          String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributions GoalContribution[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, deadlineDate])
+}
+
+model GoalContribution {
+  id            String   @id @default(uuid())
+  goalId        String
+  userId        String
+  amountInCents BigInt
+  contributedAt DateTime @default(now())
+  note          String?
+  createdAt     DateTime @default(now())
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+  @@index([userId])
+  @@index([userId, contributedAt])
 }
