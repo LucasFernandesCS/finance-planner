@@ -184,6 +184,35 @@ describe("income endpoints", () => {
     expect(response.body.incomes[0].title).toBe("Salario");
   });
 
+  it("lists recurring monthly incomes in future months and keeps extra income punctual", async () => {
+    const { token } = await registerAndLogin();
+
+    await request(app)
+      .post("/incomes")
+      .set("Authorization", `Bearer ${token}`)
+      .send(incomePayload({ title: "Salario recorrente", type: "MONTHLY", referenceMonth: "2026-06" }))
+      .expect(201);
+    await request(app)
+      .post("/incomes")
+      .set("Authorization", `Bearer ${token}`)
+      .send(incomePayload({ title: "Freela pontual", type: "EXTRA", referenceMonth: "2026-06" }))
+      .expect(201);
+
+    const june = await request(app)
+      .get("/incomes?month=2026-06")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const july = await request(app)
+      .get("/incomes?month=2026-07")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(june.body.incomes.map((income: { title: string }) => income.title)).toEqual(
+      expect.arrayContaining(["Salario recorrente", "Freela pontual"])
+    );
+    expect(july.body.incomes.map((income: { title: string }) => income.title)).toEqual(["Salario recorrente"]);
+  });
+
   it("updates an owned income", async () => {
     const { token } = await registerAndLogin();
     const created = await request(app)

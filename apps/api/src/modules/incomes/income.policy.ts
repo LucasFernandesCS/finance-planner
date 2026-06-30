@@ -26,6 +26,18 @@ export function fromReferenceMonthDate(referenceMonth: Date): string {
   return referenceMonth.toISOString().slice(0, 7);
 }
 
+export function isIncomeApplicableToMonth(input: {
+  type: "MONTHLY" | "EXTRA";
+  incomeReferenceMonth: string;
+  queryReferenceMonth: string;
+}): boolean {
+  if (input.type === "MONTHLY") {
+    return input.incomeReferenceMonth <= input.queryReferenceMonth;
+  }
+
+  return input.incomeReferenceMonth === input.queryReferenceMonth;
+}
+
 export function validateIncomeInput(input: unknown): IncomeInput {
   if (!input || typeof input !== "object") {
     throw validationError();

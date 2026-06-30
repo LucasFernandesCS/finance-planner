@@ -98,6 +98,21 @@ describe("GoalService", () => {
     ).rejects.toMatchObject({ code: GOAL_ERROR_CODES.notFinanciallyFeasible });
   });
 
+  it("rejects a goal with monthly amount below the suggested amount", async () => {
+    await expect(
+      createUserGoal("user-id", {
+        ...validGoalInput,
+        targetAmountInCents: 1500000,
+        monthlyAmountInCents: 125000,
+        deadlineDate: "2027-02-28"
+      })
+    ).rejects.toMatchObject({
+      code: GOAL_ERROR_CODES.monthlyAmountTooLow,
+      statusCode: 400,
+      details: expect.objectContaining({ suggestedMonthlyAmountInCents: expect.any(Number) })
+    });
+  });
+
   it("lists only goals from the authenticated user", async () => {
     await expect(listUserGoals("user-id")).resolves.toEqual({
       goals: [expect.objectContaining({ id: goal.id })]

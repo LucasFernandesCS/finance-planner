@@ -53,6 +53,30 @@ describe("DashboardService", () => {
     expect(result.expenses.totalExpensesInCents).toBe(470000);
   });
 
+  it("requests income totals for future dashboard months", async () => {
+    const repository = await import("../../../src/modules/dashboard/dashboard.repository.js");
+
+    await getDashboardSummary("user-id", "2026-07");
+
+    expect(repository.getIncomeTotals).toHaveBeenCalledWith("user-id", "2026-07");
+  });
+
+  it("keeps recurring monthly income separate from punctual extra income", async () => {
+    const repository = await import("../../../src/modules/dashboard/dashboard.repository.js");
+    vi.mocked(repository.getIncomeTotals).mockResolvedValueOnce({
+      monthlyIncomeInCents: 1200000,
+      extraIncomeInCents: 0
+    });
+
+    const result = await getDashboardSummary("user-id", "2026-07");
+
+    expect(result.income).toEqual({
+      monthlyIncomeInCents: 1200000,
+      extraIncomeInCents: 0,
+      totalIncomeInCents: 1200000
+    });
+  });
+
   it("returns reserve with calculated target", async () => {
     const result = await getDashboardSummary("user-id", "2026-06");
     expect(result.reserve).toEqual(expect.objectContaining({ targetAmountInCents: 2100000, completionPercentage: 23.81 }));

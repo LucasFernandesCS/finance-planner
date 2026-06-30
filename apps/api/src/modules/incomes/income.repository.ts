@@ -46,10 +46,14 @@ export async function createIncome(userId: string, input: IncomeInput): Promise<
 }
 
 export async function listIncomesByUserAndMonth(userId: string, referenceMonth: string): Promise<Income[]> {
+  const monthDate = toReferenceMonthDate(referenceMonth);
   const incomes = await prisma.income.findMany({
     where: {
       userId,
-      referenceMonth: toReferenceMonthDate(referenceMonth)
+      OR: [
+        { type: "MONTHLY", referenceMonth: { lte: monthDate } },
+        { type: "EXTRA", referenceMonth: monthDate }
+      ]
     },
     orderBy: {
       createdAt: "asc"
