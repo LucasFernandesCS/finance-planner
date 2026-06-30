@@ -2,6 +2,7 @@ import express from "express";
 
 import { errorHandler } from "./shared/error-handler.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { debtRouter } from "./modules/debts/debt.routes.js";
 import { expenseRouter } from "./modules/expenses/expense.routes.js";
 import { goalRouter } from "./modules/goals/goal.routes.js";
@@ -21,4 +22,5 @@ app.use(goalRouter);
 app.use(userProfileRouter);
 app.use(debtRouter);
 app.use(reserveTrackingRouter);
+app.use(dashboardRouter);
 app.use(errorHandler);
