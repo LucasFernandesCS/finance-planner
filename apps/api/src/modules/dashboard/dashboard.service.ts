@@ -43,7 +43,7 @@ export async function getDashboardSummary(
 
   const [incomeTotals, expenseTotals, debtsRaw, reserveRaw, primaryGoalRaw] = await Promise.all([
     getIncomeTotals(userId, referenceMonth),
-    getExpenseTotals(userId, { referenceMonth, endsBefore: range.endsBefore }),
+    getExpenseTotals(userId, referenceMonth),
     listDebts(userId),
     findReserve(userId),
     profile.primaryGoalId ? findPrimaryGoal(userId, profile.primaryGoalId) : Promise.resolve(null)

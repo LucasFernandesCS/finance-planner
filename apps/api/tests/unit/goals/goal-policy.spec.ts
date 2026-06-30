@@ -54,6 +54,50 @@ describe("goal policy", () => {
     ).toBe(true);
   });
 
+  it("rejects a monthly amount below the suggested amount", () => {
+    expect(() =>
+      validateGoalViability({
+        targetAmountInCents: 1500000,
+        monthlyAmountInCents: 125000,
+        deadlineDate: "2027-02-28",
+        availableMonthlyAmountInCents: 300000,
+        today
+      })
+    ).toThrow(
+      expect.objectContaining({
+        code: GOAL_ERROR_CODES.monthlyAmountTooLow,
+        details: expect.objectContaining({
+          suggestedMonthlyAmountInCents: 187500,
+          monthsUntilDeadline: 8
+        })
+      })
+    );
+  });
+
+  it("accepts a monthly amount equal to the suggested amount", () => {
+    expect(
+      validateGoalViability({
+        targetAmountInCents: 1500000,
+        monthlyAmountInCents: 187500,
+        deadlineDate: "2027-02-28",
+        availableMonthlyAmountInCents: 187500,
+        today
+      }).isFeasible
+    ).toBe(true);
+  });
+
+  it("accepts a monthly amount above the suggested amount when it fits the surplus", () => {
+    expect(
+      validateGoalViability({
+        targetAmountInCents: 1500000,
+        monthlyAmountInCents: 200000,
+        deadlineDate: "2027-02-28",
+        availableMonthlyAmountInCents: 250000,
+        today
+      }).suggestedMonthlyAmountInCents
+    ).toBe(187500);
+  });
+
   it("rejects a financially unfeasible goal", () => {
     expect(() =>
       validateGoalViability({

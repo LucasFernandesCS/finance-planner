@@ -1,6 +1,7 @@
 import express from "express";
 
 import { errorHandler } from "./shared/error-handler.js";
+import { corsMiddleware } from "./shared/middlewares/cors.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { debtRouter } from "./modules/debts/debt.routes.js";
@@ -13,6 +14,7 @@ import { userProfileRouter } from "./modules/user-profile/user-profile.routes.js
 
 export const app = express();
 
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(healthRouter);
 app.use(authRouter);

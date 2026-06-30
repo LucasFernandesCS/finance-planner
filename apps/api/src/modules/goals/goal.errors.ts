@@ -4,6 +4,8 @@ type GoalFeasibilityDetails = {
   suggestion?: string;
   requiredMonthlyAmountInCents?: number;
   availableMonthlyAmountInCents?: number;
+  suggestedMonthlyAmountInCents?: number;
+  monthsUntilDeadline?: number;
   minimumViableMonths?: number;
   maxTargetAmountForCurrentDeadlineInCents?: number;
 };
@@ -31,6 +33,7 @@ export const GOAL_ERROR_CODES = {
   titleTooLong: "GOAL_TITLE_TOO_LONG",
   deadlineMustBeFuture: "GOAL_DEADLINE_MUST_BE_FUTURE",
   invalidStatusTransition: "INVALID_GOAL_STATUS_TRANSITION",
+  monthlyAmountTooLow: "GOAL_MONTHLY_AMOUNT_TOO_LOW",
   notFinanciallyFeasible: "GOAL_NOT_FINANCIALLY_FEASIBLE"
 } as const;
 
@@ -91,6 +94,18 @@ export function invalidStatusTransitionError(): AppError {
     "Invalid goal status transition.",
     GOAL_ERROR_CODES.invalidStatusTransition,
     400
+  );
+}
+
+export function goalMonthlyAmountTooLowError(details: {
+  suggestedMonthlyAmountInCents: number;
+  monthsUntilDeadline: number;
+}): GoalAppError {
+  return new GoalAppError(
+    "O aporte mensal informado e menor que o necessario para atingir este objetivo no prazo escolhido.",
+    GOAL_ERROR_CODES.monthlyAmountTooLow,
+    400,
+    details
   );
 }
 

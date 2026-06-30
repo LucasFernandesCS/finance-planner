@@ -10,13 +10,14 @@ export async function findUserProfile(userId: string): Promise<DashboardProfile 
 }
 
 export async function getIncomeTotals(userId: string, referenceMonth: string) {
+  const monthDate = toMonthDate(referenceMonth);
   const [monthly, extra] = await Promise.all([
     prisma.income.aggregate({
-      where: { userId, type: "MONTHLY", referenceMonth: toMonthDate(referenceMonth) },
+      where: { userId, type: "MONTHLY", referenceMonth: { lte: monthDate } },
       _sum: { amountInCents: true }
     }),
     prisma.income.aggregate({
-      where: { userId, type: "EXTRA", referenceMonth: toMonthDate(referenceMonth) },
+      where: { userId, type: "EXTRA", referenceMonth: monthDate },
       _sum: { amountInCents: true }
     })
   ]);
@@ -26,18 +27,18 @@ export async function getIncomeTotals(userId: string, referenceMonth: string) {
   };
 }
 
-export async function getExpenseTotals(userId: string, input: { referenceMonth: string; endsBefore: Date }) {
+export async function getExpenseTotals(userId: string, referenceMonth: string) {
   const [fixed, variable, debtPayments] = await Promise.all([
     prisma.fixedExpense.aggregate({
-      where: { userId, startMonth: { lt: input.endsBefore } },
+      where: { userId, startMonth: { lte: toMonthDate(referenceMonth) } },
       _sum: { amountInCents: true }
     }),
     prisma.variableExpense.aggregate({
-      where: { userId, referenceMonth: toMonthDate(input.referenceMonth) },
+      where: { userId, referenceMonth: toMonthDate(referenceMonth) },
       _sum: { amountInCents: true }
     }),
     prisma.variableExpense.aggregate({
-      where: { userId, referenceMonth: toMonthDate(input.referenceMonth), category: "DEBT_PAYMENT" },
+      where: { userId, referenceMonth: toMonthDate(referenceMonth), category: "DEBT_PAYMENT" },
       _sum: { amountInCents: true }
     })
   ]);

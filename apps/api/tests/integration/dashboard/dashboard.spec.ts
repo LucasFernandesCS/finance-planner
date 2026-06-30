@@ -46,7 +46,7 @@ async function createGoalAndSetPrimary(token: string) {
   const goal = await request(app)
     .post("/goals")
     .set("Authorization", `Bearer ${token}`)
-    .send({ title: "Notebook", targetAmountInCents: 1500000, monthlyAmountInCents: 100000, deadlineDate: "2027-06-30" })
+    .send({ title: "Notebook", targetAmountInCents: 1500000, monthlyAmountInCents: 125000, deadlineDate: "2027-06-30" })
     .expect(201);
   await request(app)
     .patch("/me/primary-goal")
@@ -137,6 +137,73 @@ describe("dashboard summary endpoint", () => {
     const response = await request(app).get("/dashboard/summary").query({ month: "2026-06" }).set("Authorization", `Bearer ${token}`);
 
     expect(response.body.income.totalIncomeInCents).toBe(850000);
+  });
+
+  it("considers recurring monthly income and ignores previous extra income in future months", async () => {
+    const token = await registerAndLogin();
+    await seedBase(token);
+
+    const response = await request(app)
+      .get("/dashboard/summary")
+      .query({ month: "2026-07" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body.income.monthlyIncomeInCents).toBe(750000);
+    expect(response.body.income.extraIncomeInCents).toBe(0);
+    expect(response.body.income.totalIncomeInCents).toBe(750000);
+  });
+
+  it("calculates future month surplus with recurring monthly income", async () => {
+    const token = await registerAndLogin();
+    await request(app)
+      .post("/incomes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Salario", amountInCents: 1200000, type: "MONTHLY", referenceMonth: "2026-06" })
+      .expect(201);
+    await request(app)
+      .post("/fixed-expenses")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Aluguel", amountInCents: 500000, category: "RENT", startMonth: "2026-06" })
+      .expect(201);
+    await request(app)
+      .post("/variable-expenses")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Mercado", amountInCents: 140575, category: "GROCERIES", referenceMonth: "2026-07" })
+      .expect(201);
+
+    const response = await request(app)
+      .get("/dashboard/summary")
+      .query({ month: "2026-07" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body.income.totalIncomeInCents).toBe(1200000);
+    expect(response.body.expenses.totalExpensesInCents).toBe(640575);
+    expect(response.body.cashFlow.expectedSurplusInCents).toBe(559425);
+  });
+
+  it("does not include fixed expenses before their start month", async () => {
+    const token = await registerAndLogin();
+    await request(app)
+      .post("/fixed-expenses")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Aluguel de junho", amountInCents: 350000, category: "RENT", startMonth: "2026-06" })
+      .expect(201);
+
+    const may = await request(app)
+      .get("/dashboard/summary")
+      .query({ month: "2026-05" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const june = await request(app)
+      .get("/dashboard/summary")
+      .query({ month: "2026-06" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(may.body.expenses.fixedExpensesInCents).toBe(0);
+    expect(june.body.expenses.fixedExpensesInCents).toBe(350000);
   });
 
   it("returns setup flags and alerts when reserve and primary goal are missing", async () => {

@@ -42,13 +42,13 @@ async function registerAndLogin() {
   return loginResponse.body.accessToken as string;
 }
 
-async function seedBudget(token: string) {
+async function seedBudget(token: string, input: { incomeInCents?: number; fixedExpensesInCents?: number } = {}) {
   await request(app)
     .post("/incomes")
     .set("Authorization", `Bearer ${token}`)
     .send({
       title: "Salario",
-      amountInCents: 500000,
+      amountInCents: input.incomeInCents ?? 500000,
       type: "MONTHLY",
       referenceMonth: "2026-06"
     })
@@ -58,7 +58,7 @@ async function seedBudget(token: string) {
     .set("Authorization", `Bearer ${token}`)
     .send({
       title: "Aluguel",
-      amountInCents: 350000,
+      amountInCents: input.fixedExpensesInCents ?? 350000,
       category: "RENT",
       startMonth: "2026-06"
     })
@@ -105,6 +105,46 @@ describe("goal endpoints", () => {
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("GOAL_NOT_FINANCIALLY_FEASIBLE");
     expect(response.body.error.suggestion).toBeDefined();
+  });
+
+  it("rejects a goal with monthly amount below the suggested amount", async () => {
+    const token = await registerAndLogin();
+    await seedBudget(token, { incomeInCents: 700000 });
+
+    const response = await request(app)
+      .post("/goals")
+      .set("Authorization", `Bearer ${token}`)
+      .send(goalPayload({ targetAmountInCents: 1500000, monthlyAmountInCents: 125000, deadlineDate: "2026-12-30" }));
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("GOAL_MONTHLY_AMOUNT_TOO_LOW");
+    expect(response.body.error.suggestedMonthlyAmountInCents).toBe(250000);
+  });
+
+  it("accepts a goal with monthly amount equal to the suggested amount when it fits the surplus", async () => {
+    const token = await registerAndLogin();
+    await seedBudget(token, { incomeInCents: 600000 });
+
+    const response = await request(app)
+      .post("/goals")
+      .set("Authorization", `Bearer ${token}`)
+      .send(goalPayload({ targetAmountInCents: 1500000, monthlyAmountInCents: 250000, deadlineDate: "2026-12-30" }));
+
+    expect(response.status).toBe(201);
+    expect(response.body.feasibility.suggestedMonthlyAmountInCents).toBe(250000);
+  });
+
+  it("rejects a goal with sufficient monthly amount above free surplus", async () => {
+    const token = await registerAndLogin();
+    await seedBudget(token);
+
+    const response = await request(app)
+      .post("/goals")
+      .set("Authorization", `Bearer ${token}`)
+      .send(goalPayload({ targetAmountInCents: 1500000, monthlyAmountInCents: 250000, deadlineDate: "2026-12-30" }));
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("GOAL_NOT_FINANCIALLY_FEASIBLE");
   });
 
   it("rejects invalid goal values", async () => {

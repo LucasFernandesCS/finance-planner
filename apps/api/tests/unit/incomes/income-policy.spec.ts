@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { INCOME_ERROR_CODES } from "../../../src/modules/incomes/income.errors.js";
-import { validateIncomeInput } from "../../../src/modules/incomes/income.policy.js";
+import { isIncomeApplicableToMonth, validateIncomeInput } from "../../../src/modules/incomes/income.policy.js";
 
 const validIncome = {
   title: "Salario",
@@ -78,5 +78,45 @@ describe("income policy", () => {
     expect(() => validateIncomeInput({ ...validIncome, referenceMonth: "2026-13" })).toThrowError(
       expect.objectContaining({ code: INCOME_ERROR_CODES.validationError })
     );
+  });
+
+  it("includes monthly income in its reference month", () => {
+    expect(
+      isIncomeApplicableToMonth({
+        type: "MONTHLY",
+        incomeReferenceMonth: "2026-06",
+        queryReferenceMonth: "2026-06"
+      })
+    ).toBe(true);
+  });
+
+  it("includes monthly income in future months", () => {
+    expect(
+      isIncomeApplicableToMonth({
+        type: "MONTHLY",
+        incomeReferenceMonth: "2026-06",
+        queryReferenceMonth: "2026-07"
+      })
+    ).toBe(true);
+  });
+
+  it("includes extra income only in its reference month", () => {
+    expect(
+      isIncomeApplicableToMonth({
+        type: "EXTRA",
+        incomeReferenceMonth: "2026-06",
+        queryReferenceMonth: "2026-06"
+      })
+    ).toBe(true);
+  });
+
+  it("does not include extra income in future months", () => {
+    expect(
+      isIncomeApplicableToMonth({
+        type: "EXTRA",
+        incomeReferenceMonth: "2026-06",
+        queryReferenceMonth: "2026-07"
+      })
+    ).toBe(false);
   });
 });

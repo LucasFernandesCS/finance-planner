@@ -126,7 +126,7 @@ export async function getMonthlyIncomeTotal(userId: string, month: string): Prom
     where: {
       userId,
       type: "MONTHLY",
-      referenceMonth: toMonthDate(month)
+      referenceMonth: { lte: toMonthDate(month) }
     },
     _sum: { amountInCents: true }
   });

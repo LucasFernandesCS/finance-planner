@@ -4,6 +4,7 @@ import {
   deadlineMustBeFutureError,
   goalNotFinanciallyFeasibleError,
   invalidStatusTransitionError,
+  goalMonthlyAmountTooLowError,
   monthlyAmountMustBePositiveError,
   targetAmountMustBePositiveError,
   titleTooLongError,
@@ -183,9 +184,15 @@ export function validateGoalViability(input: {
     input.targetAmountInCents,
     monthsUntilDeadline
   );
-  const requiredMonthlyAmountInCents = Math.max(input.monthlyAmountInCents, suggestedMonthlyAmountInCents);
 
-  if (requiredMonthlyAmountInCents > input.availableMonthlyAmountInCents) {
+  if (input.monthlyAmountInCents < suggestedMonthlyAmountInCents) {
+    throw goalMonthlyAmountTooLowError({
+      suggestedMonthlyAmountInCents,
+      monthsUntilDeadline
+    });
+  }
+
+  if (input.monthlyAmountInCents > input.availableMonthlyAmountInCents) {
     const minimumViableMonths = calculateMinimumViableMonths(
       input.targetAmountInCents,
       input.availableMonthlyAmountInCents
@@ -196,8 +203,10 @@ export function validateGoalViability(input: {
     );
 
     throw goalNotFinanciallyFeasibleError({
-      requiredMonthlyAmountInCents,
+      requiredMonthlyAmountInCents: input.monthlyAmountInCents,
       availableMonthlyAmountInCents: input.availableMonthlyAmountInCents,
+      suggestedMonthlyAmountInCents,
+      monthsUntilDeadline,
       minimumViableMonths,
       maxTargetAmountForCurrentDeadlineInCents,
       suggestion: `Aumente o prazo para pelo menos ${minimumViableMonths} meses ou reduza o valor do objetivo para ate ${maxTargetAmountForCurrentDeadlineInCents} centavos nesse prazo.`
