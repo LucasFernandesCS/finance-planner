@@ -55,6 +55,17 @@ enum DebtType {
   OTHER
 }
 
+enum ReserveStatus {
+  BUILDING
+  PROTECTED
+  REPLENISHING
+}
+
+enum ReserveTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
 model User {
   id           String   @id @default(uuid())
   firstName    String
@@ -74,6 +85,8 @@ model User {
   profile       UserProfile?
   debts         Debt[]
   debtPayments  DebtPayment[]
+  emergencyReserve EmergencyReserve?
+  reserveTransactions ReserveTransaction[]
 }
 
 model RefreshToken {
@@ -236,4 +249,38 @@ model DebtPayment {
   @@index([debtId])
   @@index([userId])
   @@index([userId, paidAt])
+}
+
+model EmergencyReserve {
+  id                    String        @id @default(uuid())
+  userId                String        @unique
+  protectionMonths      Int
+  currentBalanceInCents BigInt        @default(0)
+  status                ReserveStatus @default(BUILDING)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions ReserveTransaction[]
+
+  @@index([userId])
+  @@index([userId, status])
+}
+
+model ReserveTransaction {
+  id            String                 @id @default(uuid())
+  userId        String
+  reserveId     String
+  type          ReserveTransactionType
+  amountInCents BigInt
+  occurredAt    DateTime               @default(now())
+  note          String?
+  createdAt     DateTime               @default(now())
+
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reserve EmergencyReserve @relation(fields: [reserveId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([reserveId])
+  @@index([userId, occurredAt])
 }
